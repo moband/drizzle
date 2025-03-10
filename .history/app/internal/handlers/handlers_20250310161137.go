@@ -35,7 +35,6 @@ func (h *Handlers) HandleRequest(conn net.Conn, request *http.Request) {
 	}
 }
 
-// handleGet handles GET requests
 func (h *Handlers) handleGet(conn net.Conn, request *http.Request) {
 	switch {
 	case request.Path == "/":
@@ -49,7 +48,6 @@ func (h *Handlers) handleGet(conn net.Conn, request *http.Request) {
 	}
 }
 
-// handlePost handles POST requests
 func (h *Handlers) handlePost(conn net.Conn, request *http.Request) {
 
 	switch {

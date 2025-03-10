@@ -9,6 +9,32 @@ import (
 	"strings"
 )
 
+// HTTP Methods
+const (
+	MethodGet  = "GET"
+	MethodPost = "POST"
+)
+
+// HTTP Status Codes
+const (
+	StatusOK       = "200 OK"
+	StatusCreated  = "201 Created"
+	StatusNotFound = "404 Not Found"
+)
+
+// Content Types
+const (
+	ContentTypePlain       = "text/plain"
+	ContentTypeOctetStream = "application/octet-stream"
+)
+
+// Header names
+const (
+	HeaderContentType   = "content-type"
+	HeaderContentLength = "content-length"
+	HeaderUserAgent     = "user-agent"
+)
+
 // Request represents an HTTP request
 type Request struct {
 	Method  string
@@ -18,7 +44,7 @@ type Request struct {
 }
 
 // ParseRequest reads and parses an HTTP request from a connection
-func ParseRequest(conn net.Conn) (*Request, error) {
+func ParseRequest(conn net.Conn) (map[string]any, error) {
 	reader := bufio.NewReader(conn)
 
 	// Parse the request line
@@ -39,13 +65,12 @@ func ParseRequest(conn net.Conn) (*Request, error) {
 		return nil, err
 	}
 
-	// Build and return the request struct
-	request := &Request{
-		Method:  method,
-		Path:    path,
-		Headers: headers,
-		Body:    body,
-	}
+	// Build the request map (keeping the same structure for compatibility)
+	request := make(map[string]any)
+	request["method"] = method
+	request["path"] = path
+	request["headers"] = headers
+	request["body"] = body
 
 	return request, nil
 }

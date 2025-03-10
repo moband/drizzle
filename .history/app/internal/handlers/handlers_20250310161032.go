@@ -24,19 +24,32 @@ func New(cfg *config.Config) *Handlers {
 
 // HandleRequest routes and handles an HTTP request
 func (h *Handlers) HandleRequest(conn net.Conn, request *http.Request) {
+	path := request.Path
+	method := request.Method
 
-	switch request.Method {
-	case http.GET:
-		h.handleGet(conn, request)
-	case http.POST:
-		h.handlePost(conn, request)
+	switch {
+	case path == "/":
+		h.handleRoot(conn)
+	case strings.HasPrefix(path, "/echo/"):
+		h.handleEcho(conn, path[len("/echo/"):])
+	case path == "/user-agent":
+		h.handleUserAgent(conn, request.Headers[http.HeaderUserAgent])
+	case strings.HasPrefix(path, "/files/"):
+		filename := path[len("/files/"):]
+		if method == http.GET {
+			h.handleFilesGet(conn, filename)
+		} else if method == http.POST {
+			h.handleFilesPost(conn, filename, request.Body)
+		} else {
+			h.writeResponse(conn, http.StatusNotFound, "", nil, 0)
+		}
 	default:
-		h.writeResponse(conn, http.StatusMethodNotAllowed, "", nil, 0)
+		h.writeResponse(conn, http.StatusNotFound, "", nil, 0)
 	}
 }
 
-// handleGet handles GET requests
 func (h *Handlers) handleGet(conn net.Conn, request *http.Request) {
+
 	switch {
 	case request.Path == "/":
 		h.handleRoot(conn)
@@ -49,11 +62,10 @@ func (h *Handlers) handleGet(conn net.Conn, request *http.Request) {
 	}
 }
 
-// handlePost handles POST requests
 func (h *Handlers) handlePost(conn net.Conn, request *http.Request) {
 
 	switch {
-	case strings.HasPrefix(request.Path, "/files/"):
+	case strings.HasPrefix(path, "/files/"):
 		filename := request.Path[len("/files/"):]
 		h.handleFilesPost(conn, filename, request.Body)
 	default:
