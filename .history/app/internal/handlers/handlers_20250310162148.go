@@ -24,12 +24,25 @@ func New(cfg *config.Config) *Handlers {
 
 // HandleRequest routes and handles an HTTP request
 func (h *Handlers) HandleRequest(conn net.Conn, request *http.Request) {
+	path := request.Path
+	method := request.Method
 
-	switch request.Method {
-	case http.GET:
-		h.handleGet(conn, request)
-	case http.POST:
-		h.handlePost(conn, request)
+	switch {
+	case path == "/":
+		h.handleRoot(conn)
+	case strings.HasPrefix(path, "/echo/"):
+		h.handleEcho(conn, request, path[len("/echo/"):])
+	case path == "/user-agent":
+		h.handleUserAgent(conn, request.Headers[http.HeaderUserAgent])
+	case strings.HasPrefix(path, "/files/"):
+		filename := path[len("/files/"):]
+		if method == http.GET {
+			h.handleFilesGet(conn, filename)
+		} else if method == http.POST {
+			h.handleFilesPost(conn, filename, request.Body)
+		} else {
+			h.writeResponse(conn, http.StatusNotFound, "", nil, 0)
+		}
 	default:
 		h.writeResponse(conn, http.StatusNotFound, "", nil, 0)
 	}
@@ -41,7 +54,7 @@ func (h *Handlers) handleGet(conn net.Conn, request *http.Request) {
 	case request.Path == "/":
 		h.handleRoot(conn)
 	case strings.HasPrefix(request.Path, "/echo/"):
-		h.handleEcho(conn, request, request.Path[len("/echo/"):])
+		h.handleEcho(conn, request.Path[len("/echo/"):])
 	case request.Path == "/user-agent":
 		h.handleUserAgent(conn, request.Headers[http.HeaderUserAgent])
 	case strings.HasPrefix(request.Path, "/files/"):
