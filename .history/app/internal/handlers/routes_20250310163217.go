@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"bytes"
+	"compress/gzip"
 	"net"
 	"os"
 	"path/filepath"
@@ -21,12 +23,25 @@ func (h *Handlers) handleEcho(conn net.Conn, request *http.Request, content stri
 	// Check if client accepts gzip encoding
 	if request.AcceptsEncoding(http.EncodingGzip) {
 		// Compress the content with gzip
-		compressedBytes, err := http.CompressGzip(bodyBytes)
+		var compressedBuffer bytes.Buffer
+		gzipWriter := gzip.NewWriter(&compressedBuffer)
+
+		// Write the content to the gzip writer
+		_, err := gzipWriter.Write(bodyBytes)
 		if err != nil {
-			// Fall back to uncompressed response if compression fails
 			h.writeResponse(conn, http.StatusOK, http.ContentTypePlain, bodyBytes, len(bodyBytes))
 			return
 		}
+
+		// Close the writer to flush any pending data
+		err = gzipWriter.Close()
+		if err != nil {
+			h.writeResponse(conn, http.StatusOK, http.ContentTypePlain, bodyBytes, len(bodyBytes))
+			return
+		}
+
+		// Get the compressed data
+		compressedBytes := compressedBuffer.Bytes()
 
 		// Send response with Content-Encoding header and compressed body
 		h.writeResponseWithEncoding(
@@ -55,12 +70,25 @@ func (h *Handlers) handleUserAgent(conn net.Conn, request *http.Request, userAge
 	// Check if client accepts gzip encoding
 	if request.AcceptsEncoding(http.EncodingGzip) {
 		// Compress the content with gzip
-		compressedBytes, err := http.CompressGzip(bodyBytes)
+		var compressedBuffer bytes.Buffer
+		gzipWriter := gzip.NewWriter(&compressedBuffer)
+
+		// Write the content to the gzip writer
+		_, err := gzipWriter.Write(bodyBytes)
 		if err != nil {
-			// Fall back to uncompressed response if compression fails
 			h.writeResponse(conn, http.StatusOK, http.ContentTypePlain, bodyBytes, len(bodyBytes))
 			return
 		}
+
+		// Close the writer to flush any pending data
+		err = gzipWriter.Close()
+		if err != nil {
+			h.writeResponse(conn, http.StatusOK, http.ContentTypePlain, bodyBytes, len(bodyBytes))
+			return
+		}
+
+		// Get the compressed data
+		compressedBytes := compressedBuffer.Bytes()
 
 		// Send response with Content-Encoding header and compressed body
 		h.writeResponseWithEncoding(
