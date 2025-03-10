@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"log"
 
 	"github.com/codecrafters-io/http-server-starter-go/app/internal/config"
@@ -9,15 +8,8 @@ import (
 )
 
 func main() {
-	// Parse command line flags
-	directory := flag.String("directory", "", "Directory to serve files from")
-	flag.Parse()
-
-	// Create config
-	cfg := &config.Config{
-		FilesDirectory: *directory,
-		Address:        "0.0.0.0:4221",
-	}
+	// Load configuration
+	cfg := config.Load()
 
 	// Create and start the server
 	srv := server.New(cfg)
